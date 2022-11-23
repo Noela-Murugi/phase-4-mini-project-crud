@@ -1,33 +1,40 @@
 class SpicesController < ApplicationController
+    wrap_parameters format: []
+    rescue_from ActiveRecord::RecordNotFound, with: :render_not_found_response
 
     def index
-        spices = Spice.all
-        render json: spices
+      spices = Spice.all
+      render json: spices, status: :ok
     end
 
-    def create 
-        spice = Spice.create(spice_params)
-        render json: spice, status: :created
+    def create
+      spice = Spice.create(spice_params)
+      render json: spice, status: :created
     end
 
-    def update 
-        #find the id
-        spice = Spice.find_by(id: params[:id])
-        #update
-        spice.update(spice_params)
-        #render json data 
-        render json: spice, status: :created
+    def update
+      spice = find_spice
+      spice.update(rating: params[:rating])
+      render json: spice, status: :accepted
     end
 
     def destroy
-        spice = Spice.find_by(id: params[:id])
-        spice.destroy
-        head :no_content
+      spice = find_spice
+      spice.destroy
+      head :no_content
     end
 
-    private 
+    private
 
     def spice_params
-        params.permit(:title, :description, :image, :notes, :rating)
+      params.permit(:title, :image, :description, :notes, :rating)
+    end
+
+    def find_spice
+      Spice.find(params[:id])
+    end
+
+    def render_not_found_response
+      render json: { error: "Spice not found" }, status: :not_found
     end
 end
